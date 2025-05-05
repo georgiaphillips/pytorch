@@ -237,7 +237,6 @@ class CUDATemplateKernel(CUDAKernel):
         inputs: list[IRNode],
         outputs: list[IRNode],
         epilogue_inputs: list[IRNode],
-        epilogue_outputs: list[IRNode],
         names_str: str = "",
         input_reorder: Optional[list[int]] = None,
     ) -> str:
@@ -283,13 +282,6 @@ class CUDATemplateKernel(CUDAKernel):
             if node is not None:
                 self.named_nodes[name] = node
                 self.args.output_buffers[node.get_name()] = name
-
-        for epilogue_output in epilogue_outputs:
-            if epilogue_output is not None:
-                self.named_nodes[epilogue_output.get_name()] = epilogue_output
-                self.args.output_buffers[epilogue_output.get_name()] = (
-                    epilogue_output.get_name()
-                )
 
         arg_defs, *_ = self.args.cpp_argdefs()
 
@@ -569,6 +561,7 @@ class CUDATemplateCaller(ChoiceCaller):
             tuple[CUDATemplateKernel, functools.partial[str]],
         ],
         bmreq: CUDABenchmarkRequest,
+        supports_epilogue_fusion: bool,
         template: "CUDATemplate",  # type: ignore[name-defined]
         info_kwargs: Optional[
             dict[str, Union[PrimitiveInfoType, list[PrimitiveInfoType]]]
@@ -579,6 +572,7 @@ class CUDATemplateCaller(ChoiceCaller):
         self.category = category
         self.make_kernel_render = make_kernel_render
         self.bmreq = bmreq
+        self.supports_epilogue_fusion = supports_epilogue_fusion
         self.template = template
         self.info_kwargs = info_kwargs
 
@@ -635,6 +629,7 @@ class CUDATemplateCaller(ChoiceCaller):
                 inputs=self.input_nodes,
                 make_kernel_render=self.make_kernel_render,
                 workspace_size=self.bmreq.workspace_size,
+                supports_epilogue_fusion=self.supports_epilogue_fusion,
                 template=self.template,
             )
         )
