@@ -287,6 +287,7 @@ jobs:
     name: Link checks
     needs: get-label-type
     uses: ./.github/workflows/_link_check.yml
+    if: false # Skip for now, as it's flaky, see https://github.com/pytorch/pytorch/issues/152439
     with:
       runner: ${{ needs.get-label-type.outputs.label-type }}
       ref:    ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
